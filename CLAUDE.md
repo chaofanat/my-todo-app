@@ -22,7 +22,8 @@
 │   │   ├── index.ts                # 应用入口
 │   │   ├── services/               # 业务逻辑
 │   │   │   ├── todoService.ts      # 待办 CRUD + 转日程
-│   │   │   └── calendarService.ts  # 日程 CRUD + 打卡 + 关联
+│   │   │   ├── calendarService.ts  # 日程 CRUD + 打卡 + 关联
+│   │   │   └── notificationService.ts # 系统通知（到期/日程提醒）
 │   │   ├── ipc/
 │   │   │   ├── channels.ts         # IPC 频道常量
 │   │   │   └── handlers.ts         # IPC 处理器注册
@@ -135,6 +136,17 @@ Model  → Service → View  → Bridge
 - 系统托盘（最小化到托盘、双击恢复、右键菜单）
 - 窗口状态持久化（位置、大小、最大化）
 
+### 系统通知
+
+使用 Electron 原生 Notification 模块（`src/main/services/notificationService.ts`）：
+
+- **待办到期提醒**：截止日当天及已过期的未完成待办，每次启动提醒一次
+- **日程开始提醒**：开始前 10 分钟内提醒，进行中的日程也会提醒剩余时间
+- 点击通知可聚焦应用窗口
+- 设置页可开关通知（`app.settings.enableNotifications`）
+- 每 60 秒检查一次，内存 Set 去重避免重复通知
+- Windows 需设置 `app.setAppUserModelId()` 才能正常显示通知
+
 ### IPC 频道
 
 | 分类 | 频道 | 说明 |
@@ -152,7 +164,7 @@ Model  → Service → View  → Bridge
 - `window.bounds` / `window.maximized` - 窗口状态
 - `user.preferences.theme` - 主题偏好
 - `user.preferences.startupBehavior` - 启动行为
-- `app.settings.closeToTray` / `app.settings.autoUpdate` - 应用设置
+- `app.settings.closeToTray` / `app.settings.autoUpdate` / `app.settings.enableNotifications` - 应用设置
 - `data.todos` - 待办列表
 - `data.calendarEvents` - 日程列表
 
@@ -170,6 +182,7 @@ Model  → Service → View  → Bridge
 4. 日程删除返回 `{ success: boolean; reason?: string }` 而非布尔值
 5. 待办与日程之间通过 `linkedEventUid` 和 `sourceTodoId` 双向关联
 6. 打包资源需在 `forge.config.ts` 的 `extraResource` 中配置
+7. 通知服务读取 store 设置时需提供默认值（旧 store 文件可能缺少新字段）
 
 ## 故障排查
 
@@ -186,7 +199,8 @@ npm install
 1. **应用无法启动** - 检查 Node.js 版本（推荐 18+），删除 `node_modules` 重新安装
 2. **IPC 调用失败** - 检查频道名称是否一致，重启应用使主进程重新加载
 3. **托盘图标空白** - 确认 `resources/icon.ico` 存在且 `forge.config.ts` 配置了 `extraResource`
-4. **构建失败** - 运行 `npm run lint` 检查代码规范
+4. **通知不显示** - 确认 Windows 通知权限已开启，确认 `app.setAppUserModelId()` 已调用，检查 store 中设置值
+5. **构建失败** - 运行 `npm run lint` 检查代码规范
 
 ## 相关文档
 
