@@ -1,17 +1,26 @@
-import { Tray, Menu, nativeImage, app } from 'electron';
+import { Tray, Menu, nativeImage, app, dialog } from 'electron';
 import { join } from 'path';
+import { existsSync } from 'fs';
 import { WindowManager } from '../window/WindowManager';
 import type { Logger } from 'electron-log';
 
 let tray: Tray | null = null;
 
 export function setupTray(windowManager: WindowManager, logger: Logger): void {
-  // 创建托盘图标
-  const iconPath = join(__dirname, '../../resources/tray-icon.png');
-  const icon = nativeImage.createFromPath(iconPath);
+  const iconPath = app.isPackaged
+    ? join(process.resourcesPath, 'icon.ico')
+    : join(app.getAppPath(), 'resources/icon.ico');
+
+  let icon: Electron.NativeImage;
+  if (existsSync(iconPath)) {
+    icon = nativeImage.createFromPath(iconPath);
+  } else {
+    logger.warn('托盘图标不存在:', iconPath);
+    icon = nativeImage.createEmpty();
+  }
 
   tray = new Tray(icon);
-  tray.setToolTip('Electron Vue App');
+  tray.setToolTip('待办笔记');
 
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -28,8 +37,13 @@ export function setupTray(windowManager: WindowManager, logger: Logger): void {
     {
       label: '关于',
       click: () => {
-        // 可以打开关于窗口
-        logger.info('用户点击关于');
+        dialog.showMessageBox({
+          type: 'info',
+          title: '关于',
+          message: '待办笔记',
+          detail: `版本: ${app.getVersion()}\n支持 ICS 日历导入的待办管理应用`,
+          buttons: ['确定'],
+        });
       },
     },
     { type: 'separator' },
@@ -43,7 +57,6 @@ export function setupTray(windowManager: WindowManager, logger: Logger): void {
 
   tray.setContextMenu(contextMenu);
 
-  // 双击托盘图标显示主窗口
   tray.on('double-click', () => {
     const mainWindow = windowManager.getMainWindow();
     if (mainWindow) {

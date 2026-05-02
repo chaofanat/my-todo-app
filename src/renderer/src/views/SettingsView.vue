@@ -1,74 +1,103 @@
 <template>
   <div class="settings">
     <div class="settings-header">
-      <button @click="goBack" class="back-button">← 返回</button>
+      <button @click="goBack" class="back-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        返回
+      </button>
       <h1>设置</h1>
     </div>
 
     <div class="settings-content">
-      <div class="settings-section">
-        <h2>外观</h2>
-        <div class="setting-item">
+      <section class="setting-group">
+        <h2 class="group-title">外观</h2>
+        <div class="setting-row">
           <div class="setting-info">
             <span class="setting-label">主题</span>
-            <span class="setting-desc">选择应用主题</span>
+            <span class="setting-hint">选择应用主题风格</span>
           </div>
-          <select v-model="settings.theme" @change="saveSettings">
-            <option value="light">浅色</option>
-            <option value="dark">深色</option>
-            <option value="system">跟随系统</option>
-          </select>
+          <div class="theme-picker">
+            <button
+              v-for="t in themes"
+              :key="t.value"
+              :class="['theme-opt', { active: settings.theme === t.value }]"
+              @click="settings.theme = t.value; saveSettings()"
+            >
+              {{ t.label }}
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div class="settings-section">
-        <h2>行为</h2>
-        <div class="setting-item">
+      <section class="setting-group">
+        <h2 class="group-title">行为</h2>
+        <div class="setting-row">
           <div class="setting-info">
             <span class="setting-label">启动行为</span>
-            <span class="setting-desc">应用启动时的窗口状态</span>
+            <span class="setting-hint">应用启动时的窗口状态</span>
           </div>
-          <select v-model="settings.startupBehavior" @change="saveSettings">
+          <select v-model="settings.startupBehavior" @change="saveSettings" class="setting-select">
             <option value="restore">恢复上次状态</option>
             <option value="default">默认大小</option>
           </select>
         </div>
-
-        <div class="setting-item">
+        <div class="setting-row">
           <div class="setting-info">
             <span class="setting-label">关闭时最小化到托盘</span>
-            <span class="setting-desc">点击关闭按钮时隐藏到系统托盘而非退出</span>
+            <span class="setting-hint">点击关闭按钮时隐藏到系统托盘而非退出</span>
           </div>
-          <label class="switch">
+          <label class="toggle">
             <input type="checkbox" v-model="settings.closeToTray" @change="saveSettings" />
-            <span class="slider"></span>
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+            </span>
           </label>
         </div>
-      </div>
+      </section>
 
-      <div class="settings-section">
-        <h2>更新</h2>
-        <div class="setting-item">
+      <section class="setting-group">
+        <h2 class="group-title">通知</h2>
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">到期提醒</span>
+            <span class="setting-hint">待办即将到期或日程即将开始时发送系统通知</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" v-model="settings.enableNotifications" @change="saveSettings" />
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <section class="setting-group">
+        <h2 class="group-title">更新</h2>
+        <div class="setting-row">
           <div class="setting-info">
             <span class="setting-label">自动更新</span>
-            <span class="setting-desc">有新版本时自动下载更新</span>
+            <span class="setting-hint">有新版本时自动下载更新</span>
           </div>
-          <label class="switch">
+          <label class="toggle">
             <input type="checkbox" v-model="settings.autoUpdate" @change="saveSettings" />
-            <span class="slider"></span>
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+            </span>
           </label>
         </div>
-      </div>
+      </section>
 
-      <div class="settings-section">
-        <h2>关于</h2>
-        <div class="setting-item">
+      <section class="setting-group">
+        <h2 class="group-title">关于</h2>
+        <div class="setting-row">
           <div class="setting-info">
-            <span class="setting-label">应用版本</span>
-            <span class="setting-desc">{{ appVersion }}</span>
+            <span class="setting-label">版本</span>
+            <span class="setting-hint">{{ appVersion }}</span>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   </div>
 </template>
@@ -87,65 +116,53 @@ const settings = ref({
   startupBehavior: 'restore',
   closeToTray: true,
   autoUpdate: true,
+  enableNotifications: true,
 });
 
-// 监听主题变化
+const themes = [
+  { value: 'light' as const, label: '浅色' },
+  { value: 'dark' as const, label: '深色' },
+  { value: 'system' as const, label: '跟随系统' },
+];
+
 watch(() => settings.value.theme, (newTheme) => {
   setTheme(newTheme);
 });
 
 onMounted(async () => {
   if (window.electronAPI) {
-    // 加载应用版本
     appVersion.value = await window.electronAPI.app.getVersion();
-
-    // 加载主题设置
     const savedTheme = await window.electronAPI.store.get<string>('user.preferences.theme');
-    if (savedTheme) {
-      settings.value.theme = savedTheme as any;
-    }
-
-    // 加载应用设置
+    if (savedTheme) settings.value.theme = savedTheme as any;
     const appSettings = await window.electronAPI.store.get<any>('app.settings');
     if (appSettings) {
       settings.value.closeToTray = appSettings.closeToTray ?? true;
       settings.value.autoUpdate = appSettings.autoUpdate ?? true;
+      settings.value.enableNotifications = appSettings.enableNotifications ?? true;
     }
-
-    // 加载启动行为
     const startupBehavior = await window.electronAPI.store.get<string>('user.preferences.startupBehavior');
-    if (startupBehavior) {
-      settings.value.startupBehavior = startupBehavior;
-    }
+    if (startupBehavior) settings.value.startupBehavior = startupBehavior;
   }
 });
 
 const saveSettings = async () => {
   if (window.electronAPI) {
-    // 保存主题设置
     await window.electronAPI.store.set('user.preferences.theme', settings.value.theme);
     await window.electronAPI.store.set('user.preferences.startupBehavior', settings.value.startupBehavior);
-
-    // 保存应用设置
     await window.electronAPI.store.set('app.settings.closeToTray', settings.value.closeToTray);
     await window.electronAPI.store.set('app.settings.autoUpdate', settings.value.autoUpdate);
-
-    await window.electronAPI.log.info('设置已保存');
+    await window.electronAPI.store.set('app.settings.enableNotifications', settings.value.enableNotifications);
   }
 };
 
-const goBack = () => {
-  router.push('/');
-};
+const goBack = () => router.push('/');
 </script>
 
 <style scoped>
 .settings {
-  padding: 24px;
-  max-width: 800px;
+  max-width: 640px;
   margin: 0 auto;
-  background-color: var(--bg-color);
-  min-height: 100vh;
+  padding: 24px 40px 60px;
 }
 
 .settings-header {
@@ -153,122 +170,169 @@ const goBack = () => {
   align-items: center;
   gap: 16px;
   margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
 
-.back-button {
-  background: none;
-  border: 1px solid var(--border-color);
-  padding: 8px 16px;
-  border-radius: 4px;
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--ink-light);
+  font-size: 13px;
   cursor: pointer;
-  transition: background-color 0.2s;
-  color: var(--text-color);
+  transition: all 0.15s;
+  font-family: var(--font-sans);
 }
 
-.back-button:hover {
-  background: var(--bg-color-secondary);
+.back-btn:hover {
+  background: var(--paper-warm);
+  border-color: var(--ink-faint);
+  color: var(--ink);
 }
 
 .settings-header h1 {
-  margin: 0;
-  font-size: 24px;
-  color: var(--text-color);
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
 }
 
-.settings-section {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 16px;
+.setting-group {
+  margin-bottom: 28px;
 }
 
-.settings-section h2 {
-  margin: 0 0 16px 0;
-  font-size: 18px;
-  color: var(--text-color);
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-color);
+.group-title {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  padding-left: 2px;
 }
 
-.setting-item {
+.setting-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-}
-
-.setting-item:not(:last-child) {
-  border-bottom: 1px solid var(--border-color);
+  padding: 14px 16px;
+  background: var(--paper-warm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 6px;
 }
 
 .setting-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .setting-label {
-  font-weight: 500;
-  color: var(--text-color);
+  font-size: 14px;
+  font-weight: 450;
+  color: var(--ink);
 }
 
-.setting-desc {
+.setting-hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.setting-select {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
   font-size: 13px;
-  color: var(--text-color-secondary);
+  font-family: var(--font-sans);
+  outline: none;
+  cursor: pointer;
 }
 
-select {
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
+.setting-select:focus {
+  border-color: var(--accent-soft);
+}
+
+/* Theme Picker */
+.theme-picker {
+  display: flex;
+  gap: 4px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+}
+
+.theme-opt {
+  padding: 5px 14px;
+  border: none;
   border-radius: 4px;
-  background: var(--bg-color);
-  color: var(--text-color);
-  min-width: 150px;
+  background: transparent;
+  font-size: 13px;
+  color: var(--ink-light);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-sans);
 }
 
-.switch {
+.theme-opt:hover {
+  color: var(--ink);
+}
+
+.theme-opt.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Toggle */
+.toggle {
   position: relative;
   display: inline-block;
-  width: 48px;
-  height: 26px;
+  cursor: pointer;
 }
 
-.switch input {
+.toggle input {
+  position: absolute;
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: 0.3s;
-  border-radius: 26px;
+.toggle-track {
+  display: block;
+  width: 44px;
+  height: 24px;
+  background: var(--border);
+  border-radius: 12px;
+  transition: background 0.2s;
+  position: relative;
 }
 
-.slider:before {
+.toggle-thumb {
   position: absolute;
-  content: '';
-  height: 20px;
-  width: 20px;
+  top: 3px;
   left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.3s;
+  width: 18px;
+  height: 18px;
+  background: #fff;
   border-radius: 50%;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-input:checked + .slider {
-  background-color: #409eff;
+.toggle input:checked + .toggle-track {
+  background: var(--green);
 }
 
-input:checked + .slider:before {
-  transform: translateX(22px);
+.toggle input:checked + .toggle-track .toggle-thumb {
+  transform: translateX(20px);
 }
 </style>

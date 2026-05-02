@@ -39,4 +39,19 @@ export const channels = {
     updateProgress: IPC_CHANNELS.UPDATER_UPDATE_PROGRESS,
     updateDownloaded: IPC_CHANNELS.UPDATER_UPDATE_DOWNLOADED,
   },
+  // 待办事项
+  todo: {
+    getAll: IPC_CHANNELS.TODO_GET_ALL,
+    create: IPC_CHANNELS.TODO_CREATE,
+    update: IPC_CHANNELS.TODO_UPDATE,
+    delete: IPC_CHANNELS.TODO_DELETE,
+    convertToEvent: IPC_CHANNELS.TODO_CONVERT_TO_EVENT,
+  },
+  // 日程
+  calendar: {
+    getAll: IPC_CHANNELS.CALENDAR_GET_ALL,
+    import: IPC_CHANNELS.CALENDAR_IMPORT,
+    delete: IPC_CHANNELS.CALENDAR_DELETE,
+    checkIn: IPC_CHANNELS.CALENDAR_CHECK_IN,
+  },
 } as const;

@@ -8,8 +8,9 @@ import { VitePlugin } from '@electron-forge/plugin-vite';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    name: 'Electron Vue App',
-    executableName: 'electron-vue-app',
+    name: 'todo-notes',
+    executableName: 'todo-notes',
+    extraResource: ['./resources/icon.ico'],
   },
   makers: [
     new MakerSquirrel({

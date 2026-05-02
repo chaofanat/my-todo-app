@@ -31,6 +31,19 @@ export interface IPCChannels {
   'window:create': (options: CreateWindowOptions) => void;
   'window:destroy': (windowId: number) => void;
   'window:list': () => WindowInfo[];
+
+  // 待办事项
+  'todo:getAll': () => Todo[];
+  'todo:create': (todo: Omit<Todo, 'id' | 'createdAt' | 'updatedAt'>) => Todo;
+  'todo:update': (id: string, updates: Partial<Todo>) => Todo | null;
+  'todo:delete': (id: string) => boolean;
+  'todo:convertToEvent': (id: string, startDate: string, durationMinutes: number) => CalendarEvent | null;
+
+  // 日程
+  'calendar:getAll': () => CalendarEvent[];
+  'calendar:import': () => CalendarEvent[];
+  'calendar:delete': (uid: string) => { success: boolean; reason?: string };
+  'calendar:checkIn': (uid: string) => CalendarEvent | null;
 }
 
 export interface CreateWindowOptions {
@@ -97,10 +110,50 @@ export interface ElectronAPI {
     onUpdateProgress: (callback: (progress: UpdateProgress) => void) => () => void;
     onUpdateDownloaded: (callback: (info: UpdateInfo) => void) => () => void;
   };
+  todo: {
+    getAll: () => Promise<Todo[]>;
+    create: (todo: Omit<Todo, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Todo>;
+    update: (id: string, updates: Partial<Todo>) => Promise<Todo | null>;
+    delete: (id: string) => Promise<boolean>;
+    convertToEvent: (id: string, startDate: string, durationMinutes: number) => Promise<CalendarEvent | null>;
+  };
+  calendar: {
+    getAll: () => Promise<CalendarEvent[]>;
+    import: () => Promise<CalendarEvent[]>;
+    delete: (uid: string) => Promise<{ success: boolean; reason?: string }>;
+    checkIn: (uid: string) => Promise<CalendarEvent | null>;
+  };
 }
 
 declare global {
   interface Window {
     electronAPI: ElectronAPI;
   }
+}
+
+// 待办事项类型定义
+export interface Todo {
+  id: string;
+  title: string;
+  description?: string;
+  completed: boolean;
+  priority: 'low' | 'medium' | 'high';
+  dueDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  scheduled?: boolean;
+  linkedEventUid?: string;
+}
+
+// ICS 日历事件类型
+export interface CalendarEvent {
+  uid: string;
+  summary: string;
+  description?: string;
+  dtstart: string;
+  dtend?: string;
+  location?: string;
+  allDay: boolean;
+  checkedIn?: boolean;
+  sourceTodoId?: string;
 }

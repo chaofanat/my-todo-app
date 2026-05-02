@@ -2,11 +2,18 @@ import { ipcMain, app } from 'electron';
 import { channels } from './channels';
 import { WindowManager } from '../window/WindowManager';
 import { checkForUpdates, downloadUpdate, installUpdate } from '../updater';
+import { TodoService } from '../services/todoService';
+import { CalendarService } from '../services/calendarService';
 import type { Store } from 'electron-store';
 import type { Logger } from 'electron-log';
-import type { CreateWindowOptions } from '../../shared/types';
+import type { CreateWindowOptions, Todo } from '../../shared/types';
+
+let todoService: TodoService;
+let calendarService: CalendarService;
 
 export function setupIPC(windowManager: WindowManager, store: Store, logger: Logger): void {
+  todoService = new TodoService(store);
+  calendarService = new CalendarService(store);
   // 应用信息
   ipcMain.handle(channels.app.getVersion, () => {
     return app.getVersion();
@@ -86,6 +93,44 @@ export function setupIPC(windowManager: WindowManager, store: Store, logger: Log
 
   ipcMain.handle(channels.updater.install, () => {
     installUpdate();
+  });
+
+  // 待办事项
+  ipcMain.handle(channels.todo.getAll, () => {
+    return todoService.getAll();
+  });
+
+  ipcMain.handle(channels.todo.create, (_, data: Omit<Todo, 'id' | 'createdAt' | 'updatedAt'>) => {
+    return todoService.create(data);
+  });
+
+  ipcMain.handle(channels.todo.update, (_, id: string, updates: Partial<Todo>) => {
+    return todoService.update(id, updates);
+  });
+
+  ipcMain.handle(channels.todo.delete, (_, id: string) => {
+    return todoService.delete(id);
+  });
+
+  ipcMain.handle(channels.todo.convertToEvent, (_, id: string, startDate: string, durationMinutes: number) => {
+    return todoService.convertToEvent(id, startDate, durationMinutes);
+  });
+
+  // 日程
+  ipcMain.handle(channels.calendar.getAll, () => {
+    return calendarService.getAll();
+  });
+
+  ipcMain.handle(channels.calendar.import, async () => {
+    return await calendarService.importFile();
+  });
+
+  ipcMain.handle(channels.calendar.delete, (_, uid: string) => {
+    return calendarService.delete(uid);
+  });
+
+  ipcMain.handle(channels.calendar.checkIn, (_, uid: string) => {
+    return calendarService.checkIn(uid);
   });
 
   logger.info('IPC 处理器已注册');

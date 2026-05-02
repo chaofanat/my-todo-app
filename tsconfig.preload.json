@@ -5,6 +5,7 @@
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
+    "composite": true,
     "outDir": ".vite/build/preload",
     "rootDir": "src/preload",
     "resolveJsonModule": true,

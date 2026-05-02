@@ -16,8 +16,12 @@
     }
   },
   "references": [
-    { "path": "./tsconfig.main.json" },
-    { "path": "./tsconfig.preload.json" },
-    { "path": "./tsconfig.renderer.json" }
+    { "path": "./tsconfig.main.json", "composite": true },
+    { "path": "./tsconfig.preload.json", "composite": true },
+    {
+      "path": "./tsconfig.renderer.json",
+      "composite": true,
+      "disableSourceOfProjectReferenceRedirect": true
+    }
   ]
 }

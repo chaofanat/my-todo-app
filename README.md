@@ -1,82 +1,38 @@
-# Electron Vue Template
+# 待办笔记
 
-基于 Electron + Vue 3 + TypeScript 的桌面应用最佳实践模板。
+一款基于 Electron + Vue 3 + TypeScript 的桌面待办管理应用，支持 ICS 日历文件导入、待办转日程、日程打卡等功能。
+
+## 功能特性
+
+- **待办管理** - 创建、编辑、完成、删除待办，支持优先级和截止日期
+- **ICS 日历导入** - 导入 .ics 日历文件生成日程，支持全天事件和定时事件
+- **待办转日程** - 一键将待办转为日程，设置开始时间和持续时间
+- **日程打卡** - 日程结束后可打卡标记完成，已打卡日程不可删除
+- **双向关联** - 待办转日程后显示「计划执行中」，日程打卡后待办自动完成；删除日程恢复待办状态
+- **时间冲突检测** - 自动检测同时间段内的日程冲突并显示警告
+- **主题切换** - 浅色/深色/跟随系统三种主题
+- **系统托盘** - 支持最小化到托盘，双击恢复窗口
+- **窗口状态记忆** - 自动保存和恢复窗口位置、大小
+- **无边框窗口** - 自定义标题栏，集成窗口控制按钮
 
 ## 技术栈
 
-- **Electron 29** - 跨平台桌面应用框架
-- **Vue 3** - 前端框架（Composition API）
-- **TypeScript** - 类型安全
+- **Electron 29** + **Electron Forge** - 桌面应用框架与打包
+- **Vue 3** (Composition API) + **TypeScript** - 前端框架
 - **Vite 5** - 构建工具
-- **Electron Forge** - 打包和分发
 - **Pinia** - 状态管理
-- **Vue Router** - 路由管理
-
-## 特性
-
-- 完整的 MSVB 架构（Model → Service → View → Bridge）
-- 系统托盘支持
-- 自动更新（electron-updater）
-- 数据持久化（electron-store）
-- 日志系统（electron-log）
-- 崩溃报告
-- 多窗口管理
-- 浅色/深色主题切换
-- 中文菜单栏
-- ESLint + Prettier 代码规范
-- 完整的 TypeScript 类型定义
+- **electron-store** - 本地数据持久化
+- **ical.js** - ICS 日历文件解析
 
 ## 快速开始
 
-### 使用模板创建新项目
-
-**方式一：GitHub CLI**
-
 ```bash
-gh repo create my-app --template chaofanat/electron-vue-template
-cd my-app
+# 安装依赖
 npm install
+
+# 开发模式
 npm run dev
-```
 
-**方式二：GitHub 网页**
-
-1. 点击页面顶部的 "Use this template" 按钮
-2. 选择 "Create a new repository"
-3. 克隆新仓库到本地
-
-```bash
-git clone https://github.com/your-username/my-app.git
-cd my-app
-npm install
-npm run dev
-```
-
-### 网络问题处理
-
-如果 `npm install` 时遇到网络问题（Electron 下载失败）：
-
-```bash
-# Windows
-$env:ELECTRON_MIRROR='https://npmmirror.com/mirrors/electron/'
-npm install
-
-# macOS / Linux
-export ELECTRON_MIRROR='https://npmmirror.com/mirrors/electron/'
-npm install
-```
-
-## 开发指南
-
-### 启动开发服务器
-
-```bash
-npm run dev
-```
-
-### 构建和打包
-
-```bash
 # 打包应用
 npm run build
 
@@ -84,115 +40,49 @@ npm run build
 npm run make
 ```
 
-### 代码规范
+### 网络问题处理
 
-```bash
-# 检查代码规范
-npm run lint
+如果 `npm install` 时遇到 Electron 下载失败：
 
-# 自动修复
-npm run lint:fix
-
-# 格式化代码
-npm run format
+```powershell
+# Windows PowerShell
+$env:ELECTRON_MIRROR='https://npmmirror.com/mirrors/electron/'
+npm install
 ```
 
 ## 项目结构
 
 ```
-├── src/
-│   ├── main/                    # 主进程 (Node.js 环境)
-│   │   ├── index.ts             # 应用入口
-│   │   ├── window/              # 窗口管理
-│   │   ├── ipc/                 # IPC 通信
-│   │   ├── tray/                # 系统托盘
-│   │   ├── updater/             # 自动更新
-│   │   ├── store/               # 数据存储
-│   │   ├── logger/              # 日志系统
-│   │   └── crash/               # 崩溃报告
-│   ├── preload/                 # 预加载脚本
-│   │   └── index.ts
-│   ├── renderer/                # 渲染进程 (Vue 3)
-│   │   └── src/
-│   │       ├── App.vue          # 根组件
-│   │       ├── router/          # 路由配置
-│   │       ├── views/           # 页面组件
-│   │       ├── components/      # 通用组件
-│   │       └── styles/          # 样式文件
-│   └── shared/                  # 共享代码
-│       ├── types.ts             # 类型定义
-│       └── constants.ts         # 常量定义
-├── resources/                   # 静态资源
-├── CLAUDE.md                    # 开发文档
-└── package.json
+src/
+├── main/                    # 主进程
+│   ├── services/            # 业务逻辑（待办服务、日程服务）
+│   ├── ipc/                 # IPC 通信（频道定义、处理器）
+│   ├── window/              # 窗口管理（无边框主窗口）
+│   ├── tray/                # 系统托盘
+│   ├── store/               # 数据存储
+│   └── logger/              # 日志系统
+├── preload/                 # 预加载脚本（Bridge 层）
+├── renderer/                # 渲染进程（Vue 3）
+│   └── src/
+│       ├── views/           # 页面（主页、设置）
+│       ├── components/      # 组件（待办项、日程项）
+│       ├── composables/     # 组合式函数（主题）
+│       └── styles/          # 样式（全局样式、主题变量）
+└── shared/                  # 共享代码（类型定义、常量）
 ```
 
-## 开发哲学：MSVB 模式
+## 架构
 
-本项目采用 MSVB（Model → Service → View → Bridge）开发模式：
+采用 MSVB（Model → Service → View → Bridge）模式：
 
-```
-数据层 → 服务层 → 视图层 → 桥接层
-Model  → Service → View  → Bridge
-```
+- **Model** - 数据类型定义（`shared/types.ts`）与持久化存储（`electron-store`）
+- **Service** - 业务逻辑（`main/services/`）与 IPC 处理器（`main/ipc/handlers.ts`）
+- **View** - 用户界面（Vue 组件、页面、主题）
+- **Bridge** - 进程桥接（`preload/index.ts` 暴露 API 给渲染进程）
 
-### 开发流程
+## 数据存储
 
-添加新功能时，按以下顺序进行：
-
-1. **Model** - 定义数据类型和存储结构
-2. **Service** - 实现业务逻辑，注册 IPC 处理器
-3. **View** - 创建页面和组件
-4. **Bridge** - 在 preload 中暴露 API
-
-详细说明请参考 [CLAUDE.md](./CLAUDE.md)
-
-## 核心功能
-
-### IPC 通信
-
-```typescript
-// 渲染进程调用主进程
-const version = await window.electronAPI.app.getVersion();
-```
-
-### 数据存储
-
-```typescript
-// 保存数据
-await window.electronAPI.store.set('key', value);
-
-// 读取数据
-const value = await window.electronAPI.store.get('key');
-```
-
-### 主题切换
-
-```typescript
-// 切换主题
-import { useTheme } from './composables/useTheme';
-const { setTheme } = useTheme();
-setTheme('dark'); // 'light' | 'dark' | 'system'
-```
-
-### 多窗口管理
-
-```typescript
-// 创建子窗口
-await window.electronAPI.window.create({
-  name: '设置',
-  title: '应用设置',
-  width: 400,
-  height: 300,
-});
-```
-
-## 文档
-
-- [Electron 文档](https://www.electronjs.org/docs)
-- [Vue 3 文档](https://vuejs.org/guide/introduction.html)
-- [Electron Forge 文档](https://www.electronforge.io/)
-- [Vite 文档](https://vitejs.dev/)
+用户数据存储在 `%APPDATA%/todo-notes/` 目录，不随打包带走。卸载重装不会丢失数据。
 
 ## 许可证
 

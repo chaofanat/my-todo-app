@@ -1,5 +1,6 @@
 import Store from 'electron-store';
 import { app } from 'electron';
+import type { Todo, CalendarEvent } from '../../shared/types';
 
 // 定义存储 schema
 interface StoreSchema {
@@ -24,8 +25,11 @@ interface StoreSchema {
       autoUpdate: boolean;
       minimizeToTray: boolean;
       closeToTray: boolean;
+      enableNotifications: boolean;
     };
   };
+  todos: Todo[];
+  calendarEvents: CalendarEvent[];
 }
 
 const defaults: StoreSchema = {
@@ -44,8 +48,11 @@ const defaults: StoreSchema = {
       autoUpdate: true,
       minimizeToTray: true,
       closeToTray: true,
+      enableNotifications: true,
     },
   },
+  todos: [],
+  calendarEvents: [],
 };
 
 export function setupStore(): Store<StoreSchema> {

@@ -25,6 +25,8 @@ export class MainWindow {
       minWidth: WINDOW_DEFAULTS.MAIN.minWidth,
       minHeight: WINDOW_DEFAULTS.MAIN.minHeight,
       show: false,
+      frame: false,
+      titleBarStyle: 'hidden',
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
         contextIsolation: true,

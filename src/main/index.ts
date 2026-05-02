@@ -8,6 +8,7 @@ import { setupStore } from './store';
 import { setupCrashReporter } from './crash';
 import { setupUpdater } from './updater';
 import { handleSquirrelEvent } from './squirrel';
+import { NotificationService } from './services/notificationService';
 
 // 处理 Squirrel 安装事件
 if (handleSquirrelEvent()) {
@@ -31,9 +32,12 @@ if (!gotTheLock) {
 
   // 窗口管理器
   let windowManager: WindowManager;
+  let notificationService: NotificationService;
 
   app.whenReady().then(() => {
     logger.info('应用启动');
+
+    app.setAppUserModelId('com.todo-notes.app');
 
     // 创建窗口管理器
     windowManager = new WindowManager(store, logger);
@@ -62,6 +66,10 @@ if (!gotTheLock) {
     // 设置自动更新
     setupUpdater(windowManager, store, logger);
 
+    // 启动通知服务
+    notificationService = new NotificationService(store, windowManager, logger);
+    notificationService.start();
+
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
         windowManager.createMainWindow();
@@ -86,6 +94,7 @@ if (!gotTheLock) {
 
   app.on('before-quit', () => {
     (app as any).isQuitting = true;
+    notificationService?.stop();
     logger.info('应用退出');
   });
 }

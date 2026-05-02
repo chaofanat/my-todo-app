@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '../shared/constants';
-import type { ElectronAPI, CreateWindowOptions, UpdateInfo, UpdateProgress } from '../shared/types';
+import type { ElectronAPI, CreateWindowOptions, UpdateInfo, UpdateProgress, Todo, CalendarEvent } from '../shared/types';
 
 const electronAPI: ElectronAPI = {
   app: {
@@ -46,6 +46,22 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.on(IPC_CHANNELS.UPDATER_UPDATE_DOWNLOADED, handler);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_UPDATE_DOWNLOADED, handler);
     },
+  },
+  todo: {
+    getAll: () => ipcRenderer.invoke(IPC_CHANNELS.TODO_GET_ALL) as Promise<Todo[]>,
+    create: (todo: Omit<Todo, 'id' | 'createdAt' | 'updatedAt'>) =>
+      ipcRenderer.invoke(IPC_CHANNELS.TODO_CREATE, todo) as Promise<Todo>,
+    update: (id: string, updates: Partial<Todo>) =>
+      ipcRenderer.invoke(IPC_CHANNELS.TODO_UPDATE, id, updates) as Promise<Todo | null>,
+    delete: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.TODO_DELETE, id) as Promise<boolean>,
+    convertToEvent: (id: string, startDate: string, durationMinutes: number) =>
+      ipcRenderer.invoke(IPC_CHANNELS.TODO_CONVERT_TO_EVENT, id, startDate, durationMinutes) as Promise<CalendarEvent | null>,
+  },
+  calendar: {
+    getAll: () => ipcRenderer.invoke(IPC_CHANNELS.CALENDAR_GET_ALL) as Promise<CalendarEvent[]>,
+    import: () => ipcRenderer.invoke(IPC_CHANNELS.CALENDAR_IMPORT) as Promise<CalendarEvent[]>,
+    delete: (uid: string) => ipcRenderer.invoke(IPC_CHANNELS.CALENDAR_DELETE, uid) as Promise<{ success: boolean; reason?: string }>,
+    checkIn: (uid: string) => ipcRenderer.invoke(IPC_CHANNELS.CALENDAR_CHECK_IN, uid) as Promise<CalendarEvent | null>,
   },
 };
 

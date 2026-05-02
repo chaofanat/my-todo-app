@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
+import TodoView from '../views/TodoView.vue';
 import SettingsView from '../views/SettingsView.vue';
 
 const router = createRouter({
@@ -7,8 +7,8 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      name: 'todo',
+      component: TodoView,
     },
     {
       path: '/settings',

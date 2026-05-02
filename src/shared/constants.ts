@@ -1,6 +1,6 @@
 // 应用常量定义
 
-export const APP_NAME = 'Electron Vue App';
+export const APP_NAME = '待办笔记';
 export const APP_VERSION = '1.0.0';
 
 // 窗口默认配置
@@ -52,6 +52,19 @@ export const IPC_CHANNELS = {
   UPDATER_UPDATE_AVAILABLE: 'updater:update-available',
   UPDATER_UPDATE_PROGRESS: 'updater:update-progress',
   UPDATER_UPDATE_DOWNLOADED: 'updater:update-downloaded',
+
+  // 待办事项
+  TODO_GET_ALL: 'todo:getAll',
+  TODO_CREATE: 'todo:create',
+  TODO_UPDATE: 'todo:update',
+  TODO_DELETE: 'todo:delete',
+  TODO_CONVERT_TO_EVENT: 'todo:convertToEvent',
+
+  // 日程
+  CALENDAR_GET_ALL: 'calendar:getAll',
+  CALENDAR_IMPORT: 'calendar:import',
+  CALENDAR_DELETE: 'calendar:delete',
+  CALENDAR_CHECK_IN: 'calendar:checkIn',
 } as const;
 
 // 存储键名
@@ -60,4 +73,6 @@ export const STORE_KEYS = {
   WINDOW_MAXIMIZED: 'window.maximized',
   USER_PREFERENCES: 'user.preferences',
   APP_SETTINGS: 'app.settings',
+  TODOS: 'todos',
+  CALENDAR_EVENTS: 'calendarEvents',
 } as const;
