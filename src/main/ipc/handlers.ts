@@ -143,8 +143,8 @@ export function setupIPC(
   });
 
   // MCP
-  ipcMain.handle(channels.mcp.restart, async () => {
-    await mcpServerService.restart();
+  ipcMain.handle(channels.mcp.restart, () => {
+    mcpServerService.restart();
   });
 
   logger.info('IPC 处理器已注册');

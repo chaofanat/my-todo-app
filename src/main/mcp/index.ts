@@ -195,20 +195,21 @@ export class McpServerService {
     });
   }
 
-  async stop(): Promise<void> {
-    for (const [, t] of this.streamableTransports) await t.close();
-    for (const [, t] of this.sseTransports) await t.close();
+  stop(): void {
+    for (const [, t] of this.streamableTransports) t.close().catch(() => {});
+    for (const [, t] of this.sseTransports) t.close().catch(() => {});
     this.streamableTransports.clear();
     this.sseTransports.clear();
     if (this.httpServer) {
+      this.httpServer.closeAllConnections();
       this.httpServer.close();
       this.httpServer = null;
     }
     this.logger.info('MCP 服务已停止');
   }
 
-  async restart(): Promise<void> {
-    await this.stop();
+  restart(): void {
+    this.stop();
     this.start();
   }
 }

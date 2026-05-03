@@ -124,4 +124,9 @@ if (!gotTheLock) {
     mcpServerService?.stop();
     logger.info('应用退出');
   });
+
+  // 安全网：确保进程退出，防止 HTTP 连接等阻止进程终止
+  app.on('will-quit', () => {
+    setImmediate(() => process.exit(0));
+  });
 }

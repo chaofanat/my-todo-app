@@ -7,9 +7,9 @@ function runSquirrelCommand(args: string[]): boolean {
     const appFolder = path.resolve(process.execPath, '..');
     const rootAtomFolder = path.resolve(appFolder, '..');
     const updateDotExe = path.resolve(path.join(rootAtomFolder, 'Update.exe'));
-    execSync(`"${updateDotExe}" ${args.join(' ')}`);
+    execSync(`"${updateDotExe}" ${args.join(' ')}`, { timeout: 10000 });
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -24,19 +24,17 @@ export function handleSquirrelEvent(): boolean {
   switch (squirrelEvent) {
     case '--squirrel-install':
     case '--squirrel-updated':
-      // 创建桌面快捷方式和开始菜单
       runSquirrelCommand(['--createShortcut', path.basename(process.execPath)]);
-      app.quit();
+      app.exit(0);
       return true;
 
     case '--squirrel-uninstall':
-      // 移除桌面快捷方式和开始菜单
       runSquirrelCommand(['--removeShortcut', path.basename(process.execPath)]);
-      app.quit();
+      app.exit(0);
       return true;
 
     case '--squirrel-obsolete':
-      app.quit();
+      app.exit(0);
       return true;
 
     default:
