@@ -13,14 +13,17 @@
     "format": "prettier --write \"src/**/*.{vue,ts,tsx,json,css}\""
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "electron-log": "^5.1.2",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.1.7",
+    "express": "^5.2.1",
     "ical.js": "^2.2.1",
     "pinia": "^2.1.7",
     "uuid": "^14.0.0",
     "vue": "^3.4.21",
-    "vue-router": "^4.3.0"
+    "vue-router": "^4.3.0",
+    "zod": "^4.4.2"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.3.0",
@@ -30,6 +33,7 @@
     "@electron-forge/maker-zip": "^7.3.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.3.0",
     "@electron-forge/plugin-vite": "^7.3.0",
+    "@types/express": "^5.0.6",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "@vitejs/plugin-vue": "^5.0.4",

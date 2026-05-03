@@ -74,6 +74,49 @@
       </section>
 
       <section class="setting-group">
+        <h2 class="group-title">MCP 服务</h2>
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">启用 MCP 服务</span>
+            <span class="setting-hint">允许 AI 助手通过 MCP 协议访问待办和日程数据</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" v-model="settings.enableMcpServer" @change="saveMcpSettings" />
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+            </span>
+          </label>
+        </div>
+        <div class="setting-row" v-if="settings.enableMcpServer">
+          <div class="setting-info">
+            <span class="setting-label">端口</span>
+            <span class="setting-hint">MCP 服务监听端口</span>
+          </div>
+          <input
+            type="number"
+            v-model.number="settings.mcpPort"
+            @change="saveMcpSettings"
+            class="setting-input"
+            min="1024"
+            max="65535"
+          />
+        </div>
+        <div class="setting-row" v-if="settings.enableMcpServer">
+          <div class="setting-info">
+            <span class="setting-label">API 密钥</span>
+            <span class="setting-hint">留空则不鉴权，建议设置以提高安全性</span>
+          </div>
+          <input
+            type="password"
+            v-model="settings.mcpApiKey"
+            @change="saveMcpSettings"
+            class="setting-input"
+            placeholder="可选"
+          />
+        </div>
+      </section>
+
+      <section class="setting-group">
         <h2 class="group-title">更新</h2>
         <div class="setting-row">
           <div class="setting-info">
@@ -117,6 +160,9 @@ const settings = ref({
   closeToTray: true,
   autoUpdate: true,
   enableNotifications: true,
+  enableMcpServer: false,
+  mcpPort: 3000,
+  mcpApiKey: '',
 });
 
 const themes = [
@@ -139,6 +185,9 @@ onMounted(async () => {
       settings.value.closeToTray = appSettings.closeToTray ?? true;
       settings.value.autoUpdate = appSettings.autoUpdate ?? true;
       settings.value.enableNotifications = appSettings.enableNotifications ?? true;
+      settings.value.enableMcpServer = appSettings.enableMcpServer ?? false;
+      settings.value.mcpPort = appSettings.mcpPort ?? 3000;
+      settings.value.mcpApiKey = appSettings.mcpApiKey ?? '';
     }
     const startupBehavior = await window.electronAPI.store.get<string>('user.preferences.startupBehavior');
     if (startupBehavior) settings.value.startupBehavior = startupBehavior;
@@ -152,6 +201,15 @@ const saveSettings = async () => {
     await window.electronAPI.store.set('app.settings.closeToTray', settings.value.closeToTray);
     await window.electronAPI.store.set('app.settings.autoUpdate', settings.value.autoUpdate);
     await window.electronAPI.store.set('app.settings.enableNotifications', settings.value.enableNotifications);
+  }
+};
+
+const saveMcpSettings = async () => {
+  await saveSettings();
+  if (window.electronAPI) {
+    await window.electronAPI.store.set('app.settings.enableMcpServer', settings.value.enableMcpServer);
+    await window.electronAPI.store.set('app.settings.mcpPort', settings.value.mcpPort);
+    await window.electronAPI.store.set('app.settings.mcpApiKey', settings.value.mcpApiKey);
   }
 };
 
@@ -259,6 +317,26 @@ const goBack = () => router.push('/');
 
 .setting-select:focus {
   border-color: var(--accent-soft);
+}
+
+.setting-input {
+  width: 140px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  outline: none;
+}
+
+.setting-input:focus {
+  border-color: var(--accent-soft);
+}
+
+.setting-input::placeholder {
+  color: var(--ink-faint);
 }
 
 /* Theme Picker */

@@ -26,6 +26,9 @@ interface StoreSchema {
       minimizeToTray: boolean;
       closeToTray: boolean;
       enableNotifications: boolean;
+      enableMcpServer: boolean;
+      mcpPort: number;
+      mcpApiKey: string;
     };
   };
   todos: Todo[];
@@ -49,6 +52,9 @@ const defaults: StoreSchema = {
       minimizeToTray: true,
       closeToTray: true,
       enableNotifications: true,
+      enableMcpServer: false,
+      mcpPort: 3000,
+      mcpApiKey: '',
     },
   },
   todos: [],

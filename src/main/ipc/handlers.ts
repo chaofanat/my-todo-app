@@ -8,12 +8,13 @@ import type { Store } from 'electron-store';
 import type { Logger } from 'electron-log';
 import type { CreateWindowOptions, Todo } from '../../shared/types';
 
-let todoService: TodoService;
-let calendarService: CalendarService;
-
-export function setupIPC(windowManager: WindowManager, store: Store, logger: Logger): void {
-  todoService = new TodoService(store);
-  calendarService = new CalendarService(store);
+export function setupIPC(
+  windowManager: WindowManager,
+  store: Store,
+  logger: Logger,
+  todoService: TodoService,
+  calendarService: CalendarService
+): void {
   // 应用信息
   ipcMain.handle(channels.app.getVersion, () => {
     return app.getVersion();

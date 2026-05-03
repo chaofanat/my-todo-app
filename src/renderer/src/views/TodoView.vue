@@ -389,6 +389,7 @@ async function addTodo() {
     dueDate: newTodo.value.dueDate || undefined,
   });
   todos.value.unshift(created);
+  currentFilter.value = 'active';
   closeAddDialog();
 }
 

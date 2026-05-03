@@ -9,6 +9,9 @@ import { setupCrashReporter } from './crash';
 import { setupUpdater } from './updater';
 import { handleSquirrelEvent } from './squirrel';
 import { NotificationService } from './services/notificationService';
+import { TodoService } from './services/todoService';
+import { CalendarService } from './services/calendarService';
+import { McpServerService } from './mcp';
 
 // 处理 Squirrel 安装事件
 if (handleSquirrelEvent()) {
@@ -33,6 +36,9 @@ if (!gotTheLock) {
   // 窗口管理器
   let windowManager: WindowManager;
   let notificationService: NotificationService;
+  let mcpServerService: McpServerService;
+  const todoService = new TodoService(store);
+  const calendarService = new CalendarService(store);
 
   app.whenReady().then(() => {
     logger.info('应用启动');
@@ -55,7 +61,7 @@ if (!gotTheLock) {
     });
 
     // 设置 IPC 通信
-    setupIPC(windowManager, store, logger);
+    setupIPC(windowManager, store, logger, todoService, calendarService);
 
     // 设置应用菜单
     setupMenu(windowManager, logger);
@@ -69,6 +75,10 @@ if (!gotTheLock) {
     // 启动通知服务
     notificationService = new NotificationService(store, windowManager, logger);
     notificationService.start();
+
+    // 启动 MCP 服务
+    mcpServerService = new McpServerService(store, logger, todoService, calendarService);
+    mcpServerService.start();
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
@@ -95,6 +105,7 @@ if (!gotTheLock) {
   app.on('before-quit', () => {
     (app as any).isQuitting = true;
     notificationService?.stop();
+    mcpServerService?.stop();
     logger.info('应用退出');
   });
 }
