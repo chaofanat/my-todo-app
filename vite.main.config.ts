@@ -10,7 +10,7 @@ export default defineConfig({
   build: {
     outDir: '.vite/build/main',
     rollupOptions: {
-      external: ['electron', 'express', '@modelcontextprotocol/sdk'],
+      external: ['electron'],
     },
   },
 });
