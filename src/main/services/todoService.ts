@@ -60,11 +60,12 @@ export class TodoService {
     return true;
   }
 
-  convertToEvent(id: string, startDate: string, durationMinutes: number): CalendarEvent | null {
+  convertToEvent(id: string, startDate: string, durationMinutes: number): CalendarEvent | { error: string } | null {
     const todos = this.getTodos();
     const index = todos.findIndex((t) => t.id === id);
     if (index === -1) return null;
     const todo = todos[index];
+    if (todo.completed) return { error: '已完成的待办不能转为日程' };
 
     const start = new Date(startDate);
     const end = new Date(start.getTime() + durationMinutes * 60 * 1000);

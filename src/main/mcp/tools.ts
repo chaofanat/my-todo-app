@@ -97,10 +97,14 @@ export function registerTools(
       if ('error' in norm) {
         return { content: [{ type: 'text' as const, text: norm.error }], isError: true };
       }
-      const event = todoService.convertToEvent(id, norm.result!, durationMinutes);
-      if (!event) {
+      const result = todoService.convertToEvent(id, norm.result!, durationMinutes);
+      if (!result) {
         return { content: [{ type: 'text' as const, text: `转换失败，未找到待办: ${id}` }], isError: true };
       }
+      if ('error' in result) {
+        return { content: [{ type: 'text' as const, text: result.error }], isError: true };
+      }
+      const event = result;
       return { content: [{ type: 'text' as const, text: JSON.stringify(event, null, 2) }] };
     }
   );

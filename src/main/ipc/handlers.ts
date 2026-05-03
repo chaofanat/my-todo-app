@@ -120,7 +120,9 @@ export function setupIPC(
     const tz = getEffectiveTimezone(store.get('user.preferences.timezone', 'system') as string);
     const norm = normalizeToUtc(startDate, tz);
     if ('error' in norm) return null;
-    return todoService.convertToEvent(id, norm.result, durationMinutes);
+    const result = todoService.convertToEvent(id, norm.result, durationMinutes);
+    if (result && 'error' in result) return null;
+    return result;
   });
 
   // 日程
