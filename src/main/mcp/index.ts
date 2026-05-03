@@ -182,7 +182,16 @@ export class McpServerService {
     });
 
     this.httpServer = app.listen(safePort, '127.0.0.1', () => {
-      this.logger.info(`MCP 服务已启动: http://127.0.0.1:${safePort}/mcp (Streamable HTTP) /sse (SSE)`););
+      this.logger.info(`MCP 服务已启动: http://127.0.0.1:${safePort}/mcp (Streamable HTTP) /sse (SSE)`);
+    });
+
+    this.httpServer.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        this.logger.error(`MCP 端口 ${safePort} 已被占用`);
+        this.httpServer = null;
+      } else {
+        this.logger.error(`MCP 服务启动失败: ${err.message}`);
+      }
     });
   }
 
