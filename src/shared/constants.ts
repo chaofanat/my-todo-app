@@ -65,6 +65,9 @@ export const IPC_CHANNELS = {
   CALENDAR_IMPORT: 'calendar:import',
   CALENDAR_DELETE: 'calendar:delete',
   CALENDAR_CHECK_IN: 'calendar:checkIn',
+
+  // MCP
+  MCP_RESTART: 'mcp:restart',
 } as const;
 
 // 存储键名

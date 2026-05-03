@@ -1,6 +1,6 @@
 # 待办笔记
 
-一款基于 Electron + Vue 3 + TypeScript 的桌面待办管理应用，支持 ICS 日历文件导入、待办转日程、日程打卡等功能。
+一款基于 Electron + Vue 3 + TypeScript 的桌面待办管理应用，支持 ICS 日历文件导入、待办转日程、日程打卡、MCP 服务等功能。
 
 ## 功能特性
 
@@ -10,6 +10,7 @@
 - **日程打卡** - 日程结束后可打卡标记完成，已打卡日程不可删除
 - **双向关联** - 待办转日程后显示「计划执行中」，日程打卡后待办自动完成；删除日程恢复待办状态
 - **时间冲突检测** - 自动检测同时间段内的日程冲突并显示警告
+- **MCP 服务** - 内置 MCP Server，AI 助手可直接操作待办和日程数据
 - **主题切换** - 浅色/深色/跟随系统三种主题
 - **系统通知** - 待办到期提醒、日程开始提醒，支持开关
 - **系统托盘** - 支持最小化到托盘，双击恢复窗口
@@ -24,6 +25,8 @@
 - **Pinia** - 状态管理
 - **electron-store** - 本地数据持久化
 - **ical.js** - ICS 日历文件解析
+- **@modelcontextprotocol/sdk** - MCP 协议实现
+- **express** - MCP 服务 HTTP 传输层
 
 ## 快速开始
 
@@ -58,6 +61,7 @@ src/
 ├── main/                    # 主进程
 │   ├── services/            # 业务逻辑（待办服务、日程服务、通知服务）
 │   ├── ipc/                 # IPC 通信（频道定义、处理器）
+│   ├── mcp/                 # MCP 服务（Streamable HTTP + SSE 双传输）
 │   ├── window/              # 窗口管理（无边框主窗口）
 │   ├── tray/                # 系统托盘
 │   ├── store/               # 数据存储
@@ -77,9 +81,64 @@ src/
 采用 MSVB（Model → Service → View → Bridge）模式：
 
 - **Model** - 数据类型定义（`shared/types.ts`）与持久化存储（`electron-store`）
-- **Service** - 业务逻辑（`main/services/`）与 IPC 处理器（`main/ipc/handlers.ts`）
+- **Service** - 业务逻辑（`main/services/`）与 IPC 处理器（`main/ipc/handlers.ts`）与 MCP 工具（`main/mcp/`）
 - **View** - 用户界面（Vue 组件、页面、主题）
 - **Bridge** - 进程桥接（`preload/index.ts` 暴露 API 给渲染进程）
+
+## MCP 服务
+
+应用内置 MCP Server，允许 AI 助手（Claude Desktop、Cursor 等）通过 MCP 协议直接操作待办和日程数据。
+
+### 传输方式
+
+| 传输类型 | 端点 | 适用场景 |
+|----------|------|----------|
+| Streamable HTTP | `http://127.0.0.1:3000/mcp` | 推荐，新版客户端 |
+| SSE | `http://127.0.0.1:3000/sse` | 旧版客户端兼容 |
+
+默认关闭，需在设置页手动启用。仅绑定 `127.0.0.1`，支持可选 Bearer Token 鉴权。
+
+### 可用工具
+
+| 工具 | 说明 |
+|------|------|
+| `todo_list` | 获取所有待办 |
+| `todo_create` | 创建待办 |
+| `todo_update` | 更新待办 |
+| `todo_delete` | 删除待办 |
+| `todo_convertToEvent` | 待办转日程 |
+| `calendar_list` | 获取所有日程 |
+| `calendar_delete` | 删除日程 |
+| `calendar_checkIn` | 日程打卡/取消打卡 |
+
+### 客户端配置
+
+Claude Desktop 或 Cursor 配置示例：
+
+```json
+{
+  "mcpServers": {
+    "todo-notes": {
+      "url": "http://127.0.0.1:3000/mcp"
+    }
+  }
+}
+```
+
+如设置了 API Key：
+
+```json
+{
+  "mcpServers": {
+    "todo-notes": {
+      "url": "http://127.0.0.1:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-key"
+      }
+    }
+  }
+}
+```
 
 ## 数据存储
 

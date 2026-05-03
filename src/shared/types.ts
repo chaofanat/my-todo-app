@@ -123,6 +123,9 @@ export interface ElectronAPI {
     delete: (uid: string) => Promise<{ success: boolean; reason?: string }>;
     checkIn: (uid: string) => Promise<CalendarEvent | null>;
   };
+  mcp: {
+    restart: () => Promise<void>;
+  };
 }
 
 declare global {

@@ -13,6 +13,8 @@
 - **electron-store** - 本地持久化存储
 - **ical.js** - ICS 日历文件解析
 - **electron-log** - 日志系统
+- **@modelcontextprotocol/sdk** - MCP 协议实现
+- **express** - MCP 服务 HTTP 传输层
 
 ## 项目结构
 
@@ -35,6 +37,9 @@
 │   │   ├── logger/index.ts         # 日志系统
 │   │   ├── updater/index.ts        # 自动更新
 │   │   ├── menu/index.ts           # 应用菜单
+│   │   ├── mcp/
+│   │   │   ├── index.ts            # MCP 服务（Streamable HTTP + SSE）
+│   │   │   └── tools.ts            # MCP 工具定义
 │   │   └── types/ical.js.d.ts      # ical.js 类型声明
 │   ├── preload/
 │   │   └── index.ts                # 预加载脚本（Bridge 层）
@@ -98,7 +103,7 @@ Model  → Service → View  → Bridge
 | 层级 | 职责 | 位置 |
 |------|------|------|
 | **Model** | 数据定义与存储 | `src/shared/types.ts`、`src/main/store/` |
-| **Service** | 业务逻辑 | `src/main/services/`、`src/main/ipc/handlers.ts` |
+| **Service** | 业务逻辑 | `src/main/services/`、`src/main/ipc/handlers.ts`、`src/main/mcp/` |
 | **View** | 用户界面 | `src/renderer/src/views/`、`src/renderer/src/components/` |
 | **Bridge** | 进程桥接 | `src/preload/index.ts`、`src/shared/constants.ts` |
 
@@ -147,6 +152,46 @@ Model  → Service → View  → Bridge
 - 每 60 秒检查一次，内存 Set 去重避免重复通知
 - Windows 需设置 `app.setAppUserModelId()` 才能正常显示通知
 
+### MCP 服务
+
+嵌入主进程的 MCP Server（`src/main/mcp/`），允许 AI 助手通过 MCP 协议操作待办和日程数据：
+
+- **双传输支持**：Streamable HTTP（`/mcp`）+ SSE（`/sse`）
+- **默认关闭**，需在设置页手动启用
+- 仅绑定 `127.0.0.1`，不暴露到局域网
+- 可选 Bearer Token 鉴权
+- SDK 内置 DNS rebinding 保护（`createMcpExpressApp`）
+- 服务实例共享自 `index.ts`，IPC 与 MCP 使用同一 TodoService/CalendarService
+
+#### MCP 工具列表
+
+| 工具 | 说明 |
+|------|------|
+| `todo_list` | 获取所有待办 |
+| `todo_create` | 创建待办 |
+| `todo_update` | 更新待办 |
+| `todo_delete` | 删除待办 |
+| `todo_convertToEvent` | 待办转日程 |
+| `calendar_list` | 获取所有日程 |
+| `calendar_delete` | 删除日程 |
+| `calendar_checkIn` | 日程打卡/取消打卡 |
+
+#### 客户端配置
+
+Claude Desktop / Cursor 等客户端配置示例：
+
+```json
+{
+  "mcpServers": {
+    "todo-notes": {
+      "url": "http://127.0.0.1:3000/mcp"
+    }
+  }
+}
+```
+
+旧版客户端使用 SSE 传输时 URL 改为 `http://127.0.0.1:3000/sse`。
+
 ### IPC 频道
 
 | 分类 | 频道 | 说明 |
@@ -165,8 +210,9 @@ Model  → Service → View  → Bridge
 - `user.preferences.theme` - 主题偏好
 - `user.preferences.startupBehavior` - 启动行为
 - `app.settings.closeToTray` / `app.settings.autoUpdate` / `app.settings.enableNotifications` - 应用设置
-- `data.todos` - 待办列表
-- `data.calendarEvents` - 日程列表
+- `app.settings.enableMcpServer` / `app.settings.mcpPort` / `app.settings.mcpApiKey` - MCP 服务设置
+- `todos` - 待办列表
+- `calendarEvents` - 日程列表
 
 ### 日志
 
@@ -183,6 +229,8 @@ Model  → Service → View  → Bridge
 5. 待办与日程之间通过 `linkedEventUid` 和 `sourceTodoId` 双向关联
 6. 打包资源需在 `forge.config.ts` 的 `extraResource` 中配置
 7. 通知服务读取 store 设置时需提供默认值（旧 store 文件可能缺少新字段）
+8. MCP 服务与 IPC 共享同一个 TodoService/CalendarService 实例，实例化在 `index.ts` 中完成
+9. `express` 和 `@modelcontextprotocol/sdk` 不标记为 external，由 Vite 直接打包进主进程 bundle
 
 ## 故障排查
 
@@ -201,6 +249,7 @@ npm install
 3. **托盘图标空白** - 确认 `resources/icon.ico` 存在且 `forge.config.ts` 配置了 `extraResource`
 4. **通知不显示** - 确认 Windows 通知权限已开启，确认 `app.setAppUserModelId()` 已调用，检查 store 中设置值
 5. **构建失败** - 运行 `npm run lint` 检查代码规范
+6. **MCP 连接失败** - 确认设置中已启用 MCP 服务；确认客户端传输类型正确（Streamable HTTP 用 `/mcp`，SSE 用 `/sse`）；检查端口是否被占用
 
 ## 相关文档
 
@@ -208,3 +257,4 @@ npm install
 - [Vue 3 文档](https://vuejs.org/guide/introduction.html)
 - [Electron Forge 文档](https://www.electronforge.io/)
 - [Vite 文档](https://vitejs.dev/)
+- [MCP 协议规范](https://modelcontextprotocol.io/specification)

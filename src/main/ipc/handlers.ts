@@ -6,6 +6,7 @@ import { TodoService } from '../services/todoService';
 import { CalendarService } from '../services/calendarService';
 import type { Store } from 'electron-store';
 import type { Logger } from 'electron-log';
+import type { McpServerService } from '../mcp';
 import type { CreateWindowOptions, Todo } from '../../shared/types';
 
 export function setupIPC(
@@ -13,7 +14,8 @@ export function setupIPC(
   store: Store,
   logger: Logger,
   todoService: TodoService,
-  calendarService: CalendarService
+  calendarService: CalendarService,
+  mcpServerService: McpServerService
 ): void {
   // 应用信息
   ipcMain.handle(channels.app.getVersion, () => {
@@ -132,6 +134,11 @@ export function setupIPC(
 
   ipcMain.handle(channels.calendar.checkIn, (_, uid: string) => {
     return calendarService.checkIn(uid);
+  });
+
+  // MCP
+  ipcMain.handle(channels.mcp.restart, async () => {
+    await mcpServerService.restart();
   });
 
   logger.info('IPC 处理器已注册');

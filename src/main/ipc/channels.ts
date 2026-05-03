@@ -54,4 +54,8 @@ export const channels = {
     delete: IPC_CHANNELS.CALENDAR_DELETE,
     checkIn: IPC_CHANNELS.CALENDAR_CHECK_IN,
   },
+  // MCP
+  mcp: {
+    restart: IPC_CHANNELS.MCP_RESTART,
+  },
 } as const;

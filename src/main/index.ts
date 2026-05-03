@@ -61,7 +61,8 @@ if (!gotTheLock) {
     });
 
     // 设置 IPC 通信
-    setupIPC(windowManager, store, logger, todoService, calendarService);
+    mcpServerService = new McpServerService(store, logger, todoService, calendarService);
+    setupIPC(windowManager, store, logger, todoService, calendarService, mcpServerService);
 
     // 设置应用菜单
     setupMenu(windowManager, logger);
@@ -77,7 +78,6 @@ if (!gotTheLock) {
     notificationService.start();
 
     // 启动 MCP 服务
-    mcpServerService = new McpServerService(store, logger, todoService, calendarService);
     mcpServerService.start();
 
     app.on('activate', () => {

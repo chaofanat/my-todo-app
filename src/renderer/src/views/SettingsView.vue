@@ -210,6 +210,7 @@ const saveMcpSettings = async () => {
     await window.electronAPI.store.set('app.settings.enableMcpServer', settings.value.enableMcpServer);
     await window.electronAPI.store.set('app.settings.mcpPort', settings.value.mcpPort);
     await window.electronAPI.store.set('app.settings.mcpApiKey', settings.value.mcpApiKey);
+    await window.electronAPI.mcp.restart();
   }
 };
 

@@ -63,6 +63,9 @@ const electronAPI: ElectronAPI = {
     delete: (uid: string) => ipcRenderer.invoke(IPC_CHANNELS.CALENDAR_DELETE, uid) as Promise<{ success: boolean; reason?: string }>,
     checkIn: (uid: string) => ipcRenderer.invoke(IPC_CHANNELS.CALENDAR_CHECK_IN, uid) as Promise<CalendarEvent | null>,
   },
+  mcp: {
+    restart: () => ipcRenderer.invoke(IPC_CHANNELS.MCP_RESTART),
+  },
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

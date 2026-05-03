@@ -57,6 +57,10 @@ export class McpServerService {
     }
 
     const port = this.store.get('app.settings.mcpPort', 3000) as number;
+    if (!Number.isInteger(port) || port < 1024 || port > 65535) {
+      this.logger.warn(`MCP 端口无效: ${port}，使用默认端口 3000`);
+    }
+    const safePort = Number.isInteger(port) && port >= 1024 && port <= 65535 ? port : 3000;
     const apiKey = this.store.get('app.settings.mcpApiKey', '') as string;
     const app = createMcpExpressApp({ host: '127.0.0.1' });
 
@@ -177,8 +181,8 @@ export class McpServerService {
       await transport.handlePostMessage(req as any, res as any, req.body);
     });
 
-    this.httpServer = app.listen(port, '127.0.0.1', () => {
-      this.logger.info(`MCP 服务已启动: http://127.0.0.1:${port}/mcp (Streamable HTTP) /sse (SSE)`);
+    this.httpServer = app.listen(safePort, '127.0.0.1', () => {
+      this.logger.info(`MCP 服务已启动: http://127.0.0.1:${safePort}/mcp (Streamable HTTP) /sse (SSE)`););
     });
   }
 
