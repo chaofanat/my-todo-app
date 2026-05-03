@@ -65,6 +65,16 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import type { CalendarEvent } from '../../../shared/types';
+import { utcToLocal, utcToLocalDate, utcToLocalTime, getEffectiveTimezone } from '../../../shared/timezone';
+
+const tz = ref(getEffectiveTimezone('system'));
+
+onMounted(async () => {
+  if (window.electronAPI) {
+    const saved = await window.electronAPI.store.get<string>('user.preferences.timezone');
+    if (saved) tz.value = getEffectiveTimezone(saved);
+  }
+});
 
 const props = defineProps<{
   event: CalendarEvent;
@@ -110,29 +120,30 @@ const hasConflict = computed(() => {
 });
 
 const timeRange = computed(() => {
-  const start = new Date(props.event.dtstart);
   if (props.event.allDay) {
-    return formatDate(start);
+    return formatLocalDate(props.event.dtstart);
   }
-  const startStr = formatTime(start);
+  const startStr = formatLocalTime(props.event.dtstart);
   if (props.event.dtend) {
-    const end = new Date(props.event.dtend);
-    return `${formatDate(start)} ${startStr} - ${formatTime(end)}`;
+    return `${formatLocalDate(props.event.dtstart)} ${startStr} - ${formatLocalTime(props.event.dtend)}`;
   }
-  return `${formatDate(start)} ${startStr}`;
+  return `${formatLocalDate(props.event.dtstart)} ${startStr}`;
 });
 
-function formatDate(d: Date) {
-  const now = new Date();
-  const tomorrow = new Date(now);
+function formatLocalDate(utcIso: string) {
+  const localDateStr = utcToLocalDate(utcIso, tz.value);
+  const todayStr = utcToLocalDate(new Date().toISOString(), tz.value);
+  const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  if (d.toDateString() === now.toDateString()) return '今天';
-  if (d.toDateString() === tomorrow.toDateString()) return '明天';
-  return `${d.getMonth() + 1}月${d.getDate()}日`;
+  const tomorrowStr = utcToLocalDate(tomorrow.toISOString(), tz.value);
+  if (localDateStr === todayStr) return '今天';
+  if (localDateStr === tomorrowStr) return '明天';
+  const [_, m, d] = localDateStr.split('-');
+  return `${parseInt(m)}月${parseInt(d)}日`;
 }
 
-function formatTime(d: Date) {
-  return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+function formatLocalTime(utcIso: string) {
+  return utcToLocalTime(utcIso, tz.value);
 }
 </script>
 

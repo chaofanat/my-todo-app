@@ -3,6 +3,7 @@ import type { Store } from 'electron-store';
 import type { Logger } from 'electron-log';
 import type { Todo, CalendarEvent } from '../../shared/types';
 import type { WindowManager } from '../window/WindowManager';
+import { getEffectiveTimezone, getOffsetMs } from '../../shared/timezone';
 
 export class NotificationService {
   private store: Store;
@@ -46,7 +47,11 @@ export class NotificationService {
 
   private checkTodos(): void {
     const todos = this.store.get('todos', []) as unknown as Todo[];
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const tz = getEffectiveTimezone(this.store.get('user.preferences.timezone', 'system') as string);
+    const now = new Date();
+    const offsetMs = getOffsetMs(now, tz);
+    const localNow = new Date(now.getTime() + offsetMs);
+    const todayStr = localNow.toISOString().slice(0, 10);
 
     for (const todo of todos) {
       if (todo.completed || !todo.dueDate || this.notifiedTodoIds.has(todo.id)) continue;

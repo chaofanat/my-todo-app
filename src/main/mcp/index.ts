@@ -45,7 +45,7 @@ export class McpServerService {
 
   private createMcpServer(): McpServer {
     const server = new McpServer({ name: 'todo-notes-mcp', version: '1.0.0' });
-    registerTools(server, this.todoService, this.calendarService);
+    registerTools(server, this.todoService, this.calendarService, this.store);
     return server;
   }
 

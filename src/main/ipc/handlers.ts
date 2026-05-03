@@ -8,6 +8,7 @@ import type { Store } from 'electron-store';
 import type { Logger } from 'electron-log';
 import type { McpServerService } from '../mcp';
 import type { CreateWindowOptions, Todo } from '../../shared/types';
+import { normalizeToUtc, getEffectiveTimezone } from '../../shared/timezone';
 
 export function setupIPC(
   windowManager: WindowManager,
@@ -116,7 +117,10 @@ export function setupIPC(
   });
 
   ipcMain.handle(channels.todo.convertToEvent, (_, id: string, startDate: string, durationMinutes: number) => {
-    return todoService.convertToEvent(id, startDate, durationMinutes);
+    const tz = getEffectiveTimezone(store.get('user.preferences.timezone', 'system') as string);
+    const norm = normalizeToUtc(startDate, tz);
+    if ('error' in norm) return null;
+    return todoService.convertToEvent(id, norm.result, durationMinutes);
   });
 
   // 日程

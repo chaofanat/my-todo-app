@@ -18,6 +18,7 @@ interface StoreSchema {
       theme: 'light' | 'dark' | 'system';
       language: string;
       startupBehavior: 'restore' | 'default';
+      timezone: string;
     };
   };
   app: {
@@ -44,6 +45,7 @@ const defaults: StoreSchema = {
       theme: 'system',
       language: 'zh-CN',
       startupBehavior: 'restore',
+      timezone: 'system',
     },
   },
   app: {

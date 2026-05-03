@@ -1,5 +1,6 @@
 import { dialog } from 'electron';
 import * as fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 import ICAL from 'ical.js';
 import type { CalendarEvent, Todo } from '../../shared/types';
 import type { Store } from 'electron-store';
@@ -21,6 +22,25 @@ export class CalendarService {
 
   getAll(): CalendarEvent[] {
     return this.getEvents();
+  }
+
+  create(data: Omit<CalendarEvent, 'uid'>): CalendarEvent {
+    const events = this.getEvents();
+    const event: CalendarEvent = { ...data, uid: uuidv4() };
+    events.push(event);
+    this.saveEvents(events);
+    return event;
+  }
+
+  createBatch(items: Omit<CalendarEvent, 'uid'>[]): CalendarEvent[] {
+    const events = this.getEvents();
+    const created = items.map((data) => {
+      const event: CalendarEvent = { ...data, uid: uuidv4() };
+      events.push(event);
+      return event;
+    });
+    this.saveEvents(events);
+    return created;
   }
 
   async importFile(): Promise<CalendarEvent[]> {

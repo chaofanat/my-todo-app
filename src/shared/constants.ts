@@ -76,6 +76,7 @@ export const STORE_KEYS = {
   WINDOW_MAXIMIZED: 'window.maximized',
   USER_PREFERENCES: 'user.preferences',
   APP_SETTINGS: 'app.settings',
+  USER_TIMEZONE: 'user.preferences.timezone',
   TODOS: 'todos',
   CALENDAR_EVENTS: 'calendarEvents',
 } as const;

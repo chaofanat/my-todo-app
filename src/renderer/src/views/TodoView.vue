@@ -200,12 +200,14 @@ import { ref, computed, onMounted, nextTick } from 'vue';
 import type { Todo, CalendarEvent } from '../../../shared/types';
 import TodoItem from '../components/TodoItem.vue';
 import CalendarEventItem from '../components/CalendarEventItem.vue';
+import { utcToLocal, getEffectiveTimezone } from '../../../shared/timezone';
 
 const todos = ref<Todo[]>([]);
 const calendarEvents = ref<CalendarEvent[]>([]);
 const showAddDialog = ref(false);
 const currentFilter = ref<'all' | 'active' | 'completed' | 'events'>('events');
 const titleInput = ref<HTMLInputElement | null>(null);
+const userTimezone = ref('system');
 
 const newTodo = ref({
   title: '',
@@ -367,6 +369,10 @@ const emptyDesc = computed(() => {
 onMounted(async () => {
   todos.value = await window.electronAPI.todo.getAll();
   calendarEvents.value = await window.electronAPI.calendar.getAll();
+  if (window.electronAPI) {
+    const tz = await window.electronAPI.store.get<string>('user.preferences.timezone');
+    if (tz) userTimezone.value = tz;
+  }
 });
 
 function openAddDialog() {
@@ -493,8 +499,8 @@ async function convertToEvent() {
 }
 
 function formatDateTimeLocal(d: Date): string {
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const tz = getEffectiveTimezone(userTimezone.value);
+  return utcToLocal(d.toISOString(), tz);
 }
 </script>
 

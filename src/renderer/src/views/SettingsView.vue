@@ -32,6 +32,22 @@
       </section>
 
       <section class="setting-group">
+        <h2 class="group-title">时间</h2>
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">时区</span>
+            <span class="setting-hint">校准所有时间的显示和计算</span>
+          </div>
+          <select v-model="settings.timezone" @change="saveSettings" class="setting-select">
+            <option value="system">跟随系统</option>
+            <option v-for="tz in timezoneOptions" :key="tz.value" :value="tz.value">
+              {{ tz.label }} ({{ tz.offset }})
+            </option>
+          </select>
+        </div>
+      </section>
+
+      <section class="setting-group">
         <h2 class="group-title">行为</h2>
         <div class="setting-row">
           <div class="setting-info">
@@ -149,13 +165,16 @@
 import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTheme } from '../composables/useTheme';
+import { getTimezoneOptions } from '@shared/timezone';
 
 const router = useRouter();
 const appVersion = ref('');
 const { theme, setTheme } = useTheme();
+const timezoneOptions = getTimezoneOptions();
 
 const settings = ref({
   theme: 'system' as 'light' | 'dark' | 'system',
+  timezone: 'system',
   startupBehavior: 'restore',
   closeToTray: true,
   autoUpdate: true,
@@ -180,6 +199,8 @@ onMounted(async () => {
     appVersion.value = await window.electronAPI.app.getVersion();
     const savedTheme = await window.electronAPI.store.get<string>('user.preferences.theme');
     if (savedTheme) settings.value.theme = savedTheme as any;
+    const savedTz = await window.electronAPI.store.get<string>('user.preferences.timezone');
+    if (savedTz) settings.value.timezone = savedTz;
     const appSettings = await window.electronAPI.store.get<any>('app.settings');
     if (appSettings) {
       settings.value.closeToTray = appSettings.closeToTray ?? true;
@@ -197,6 +218,7 @@ onMounted(async () => {
 const saveSettings = async () => {
   if (window.electronAPI) {
     await window.electronAPI.store.set('user.preferences.theme', settings.value.theme);
+    await window.electronAPI.store.set('user.preferences.timezone', settings.value.timezone);
     await window.electronAPI.store.set('user.preferences.startupBehavior', settings.value.startupBehavior);
     await window.electronAPI.store.set('app.settings.closeToTray', settings.value.closeToTray);
     await window.electronAPI.store.set('app.settings.autoUpdate', settings.value.autoUpdate);

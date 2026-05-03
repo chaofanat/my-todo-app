@@ -12,6 +12,7 @@ import { NotificationService } from './services/notificationService';
 import { TodoService } from './services/todoService';
 import { CalendarService } from './services/calendarService';
 import { McpServerService } from './mcp';
+import type { CalendarEvent } from '../shared/types';
 
 // 处理 Squirrel 安装事件
 if (handleSquirrelEvent()) {
@@ -32,6 +33,21 @@ if (!gotTheLock) {
 
   // 初始化崩溃报告
   setupCrashReporter();
+
+  // 修复旧数据：为 MCP 创建的无 Z 后缀 ISO datetime 补回 Z
+  {
+    const events = (store.get('calendarEvents', []) as unknown) as CalendarEvent[];
+    let dirty = false;
+    for (const e of events) {
+      if (e.dtstart && !e.dtstart.endsWith('Z') && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/.test(e.dtstart)) {
+        e.dtstart += 'Z'; dirty = true;
+      }
+      if (e.dtend && !e.dtend.endsWith('Z') && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/.test(e.dtend)) {
+        e.dtend += 'Z'; dirty = true;
+      }
+    }
+    if (dirty) store.set('calendarEvents', events as any);
+  }
 
   // 窗口管理器
   let windowManager: WindowManager;
