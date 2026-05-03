@@ -60,7 +60,8 @@
 │   │       └── router/index.ts     # 路由配置
 │   └── shared/                     # 主进程与渲染进程共享
 │       ├── types.ts                # 类型定义（Todo, CalendarEvent, IPCChannels）
-│       └── constants.ts            # 常量与 IPC 频道
+│       ├── constants.ts            # 常量与 IPC 频道
+│       └── timezone.ts             # 时区工具模块（UTC 转换、时区校验）
 ├── resources/
 │   └── icon.ico                    # 应用图标
 ├── forge.config.ts                 # Electron Forge 配置
@@ -173,6 +174,8 @@ Model  → Service → View  → Bridge
 | `todo_delete` | 删除待办 |
 | `todo_convertToEvent` | 待办转日程 |
 | `calendar_list` | 获取所有日程 |
+| `calendar_create` | 创建日程 |
+| `calendar_createBatch` | 批量创建日程 |
 | `calendar_delete` | 删除日程 |
 | `calendar_checkIn` | 日程打卡/取消打卡 |
 
@@ -192,6 +195,16 @@ Claude Desktop / Cursor 等客户端配置示例：
 
 旧版客户端使用 SSE 传输时 URL 改为 `http://127.0.0.1:3000/sse`。
 
+### 时区管理
+
+所有时间存储统一为 **UTC ISO 8601**（带 `Z` 后缀），显示时按用户设定时区转换。时区工具模块在 `src/shared/timezone.ts`。
+
+- 用户可在设置页选择时区（默认跟随系统）
+- MCP 工具对传入时间参数校验时区一致性，不一致则报错
+- 前端组件使用 `utcToLocal()`/`utcToLocalTime()` 显示本地时间
+- 唯一例外：`Todo.dueDate` 为纯日期 `YYYY-MM-DD`（日粒度，不涉时区）
+- 旧数据兼容：启动时自动为无 `Z` 后缀的 ISO datetime 补回 `Z`
+
 ### IPC 频道
 
 | 分类 | 频道 | 说明 |
@@ -208,6 +221,7 @@ Claude Desktop / Cursor 等客户端配置示例：
 
 - `window.bounds` / `window.maximized` - 窗口状态
 - `user.preferences.theme` - 主题偏好
+- `user.preferences.timezone` - 时区设置（默认 `'system'`）
 - `user.preferences.startupBehavior` - 启动行为
 - `app.settings.closeToTray` / `app.settings.autoUpdate` / `app.settings.enableNotifications` - 应用设置
 - `app.settings.enableMcpServer` / `app.settings.mcpPort` / `app.settings.mcpApiKey` - MCP 服务设置
@@ -231,6 +245,8 @@ Claude Desktop / Cursor 等客户端配置示例：
 7. 通知服务读取 store 设置时需提供默认值（旧 store 文件可能缺少新字段）
 8. MCP 服务与 IPC 共享同一个 TodoService/CalendarService 实例，实例化在 `index.ts` 中完成
 9. `express` 和 `@modelcontextprotocol/sdk` 不标记为 external，由 Vite 直接打包进主进程 bundle
+10. 所有时间存储为 UTC ISO 8601（带 Z），服务层只处理 UTC，时区转换在 IPC handler / MCP tools / 前端组件中完成
+11. MCP 工具的时间参数会校验时区一致性，带偏移但与应用设定不一致时返回错误
 
 ## 故障排查
 
